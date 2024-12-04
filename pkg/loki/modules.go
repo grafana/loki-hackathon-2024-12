@@ -68,6 +68,7 @@ import (
 	"github.com/grafana/loki/v3/pkg/runtime"
 	"github.com/grafana/loki/v3/pkg/scheduler"
 	"github.com/grafana/loki/v3/pkg/scheduler/schedulerpb"
+	"github.com/grafana/loki/v3/pkg/semtest"
 	"github.com/grafana/loki/v3/pkg/storage"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/cache"
 	"github.com/grafana/loki/v3/pkg/storage/chunk/client"
@@ -141,6 +142,7 @@ const (
 	PartitionRing            string = "partition-ring"
 	BlockBuilder             string = "block-builder"
 	BlockScheduler           string = "block-scheduler"
+	SemanticTester           string = "semantic-tester"
 )
 
 const (
@@ -580,6 +582,15 @@ func (t *Loki) initQuerier() (services.Service, error) {
 		svc.AddListener(deleteRequestsStoreListener(deleteStore))
 	}
 	return svc, nil
+}
+
+func (t *Loki) initSemanticTester() (_ services.Service, err error) {
+	logger := log.With(util_log.Logger, "component", "semantic_tester")
+	t.semanticTester, err = semtest.New(t.Cfg.SemanticTester, logger, prometheus.DefaultRegisterer)
+	if err != nil {
+		return
+	}
+	return t.semanticTester, nil
 }
 
 func (t *Loki) initIngester() (_ services.Service, err error) {
